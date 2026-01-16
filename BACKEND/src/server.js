@@ -1,17 +1,20 @@
 import { makeApp } from "./app.js";
-import { connectDB } from "./config/db.js";
-import { env } from "./config/env.js";
+import { initDB } from "./config/db.js";
+
+const PORT = process.env.PORT || 3000;
 
 async function main() {
-  await connectDB();
+  try {
+    initDB();
+    const app = makeApp();
 
-  const app = makeApp();
-  app.listen(env.PORT, () => {
-    console.log(`✅ API running on http://localhost:${env.PORT}`);
-  });
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Server failed to start:", err);
+    process.exit(1);
+  }
 }
 
-main().catch((err) => {
-  console.error("❌ Server failed to start:", err);
-  process.exit(1);
-});
+main();

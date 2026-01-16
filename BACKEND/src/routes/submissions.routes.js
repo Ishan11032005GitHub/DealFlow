@@ -10,10 +10,7 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-// Public create
 router.post("/", createSubmission);
-
-// Admin routes
 router.get("/", requireAuth, listSubmissions);
 router.get("/:id", requireAuth, getSubmission);
 router.patch("/:id", requireAuth, patchSubmission);

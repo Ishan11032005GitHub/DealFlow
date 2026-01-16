@@ -15,10 +15,9 @@ yarn-error.log*
 .env.production
 
 # ======================
-# MongoDB (local only)
+# SQLite database
 # ======================
-data/
-dump/
+dealflow.db
 
 # ======================
 # Logs

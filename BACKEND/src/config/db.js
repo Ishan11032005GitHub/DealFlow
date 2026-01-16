@@ -1,11 +1,25 @@
-import mongoose from "mongoose";
-import { env } from "./env.js";
+import Database from "better-sqlite3";
+import path from "path";
 
-export async function connectDB() {
-  if (!env.MONGO_URI) {
-    throw new Error("MONGO_URI is missing in .env");
-  }
-  mongoose.set("strictQuery", true);
-  await mongoose.connect(env.MONGO_URI);
-  console.log("✅ MongoDB connected");
+const dbPath = path.resolve("dealflow.db");
+export const db = new Database(dbPath);
+
+export function initDB() {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS submissions (
+      id TEXT PRIMARY KEY,
+      founder_name TEXT NOT NULL,
+      startup_name TEXT NOT NULL,
+      pitch TEXT NOT NULL,
+      sector TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      traction TEXT,
+      status TEXT DEFAULT 'NEW',
+      reviewer_notes TEXT,
+      ai_summary TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  console.log("✅ SQLite DB initialized");
 }
