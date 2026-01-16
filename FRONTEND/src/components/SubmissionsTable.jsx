@@ -24,7 +24,7 @@ export default function SubmissionsTable({ items, onRowClick }) {
 
           <tbody>
             {items.map((s) => (
-              <tr key={s._id} onClick={() => onRowClick(s)} className="row-click">
+              <tr key={s.id} onClick={() => onRowClick(s)} className="row-click">
                 <td className="strong">{s.startupName}</td>
                 <td>{s.founderName}</td>
                 <td>{s.sector}</td>

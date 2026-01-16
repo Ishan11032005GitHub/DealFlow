@@ -139,7 +139,7 @@ export default function SubmissionDetail() {
 
               <div className="section">
                 <h3>Pitch</h3>
-                <p className="pre">{item.pitchDescription}</p>
+                <p className="pre">{item.pitch}</p>
               </div>
 
               <div className="section">

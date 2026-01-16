@@ -180,7 +180,7 @@ function cleanPayload(f) {
   return {
     founderName: f.founderName.trim(),
     startupName: f.startupName.trim(),
-    pitchDescription: f.pitchDescription.trim(),
+    pitch: f.pitchDescription.trim(), // ✅ MAP TO BACKEND FIELD
     sector: f.sector,
     stage: f.stage,
     traction: f.traction.trim(),

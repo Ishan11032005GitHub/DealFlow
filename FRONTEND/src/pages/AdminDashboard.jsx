@@ -88,7 +88,7 @@ export default function AdminDashboard() {
 
         <SubmissionsTable
           items={items}
-          onRowClick={(s) => nav(`/admin/submissions/${s._id}`)}
+          onRowClick={(s) => nav(`/admin/submissions/${s.id}`)}
         />
       </div>
     </>

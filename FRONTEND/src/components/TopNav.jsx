@@ -16,7 +16,7 @@ export default function TopNav() {
     <div className="topnav">
       <div className="topnav-inner container">
         <div className="brand">
-          <Link to="/submit" className="brand-link">Startup Intake Tool</Link>
+          <Link to="/submit" className="brand-link">DealFlow</Link>
           <span className="tag">Internal MVP</span>
         </div>
 
