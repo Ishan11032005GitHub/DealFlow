@@ -1,46 +1,25 @@
-import React from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { logout, isAuthed } from "../api/auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import { isAuthed, logout } from "../api/auth";
 
 export default function TopNav() {
   const nav = useNavigate();
-  const loc = useLocation();
   const authed = isAuthed();
-
-  const onLogout = () => {
-    logout();
-    nav("/admin/login", { replace: true });
-  };
 
   return (
     <div className="topnav">
-      <div className="topnav-inner container">
-        <div className="brand">
-          <Link to="/submit" className="brand-link">DealFlow</Link>
-          <span className="tag">Internal MVP</span>
-        </div>
-
-        <div className="nav-actions">
-          <Link className={`nav-link ${loc.pathname === "/submit" ? "active" : ""}`} to="/submit">
-            Submit
-          </Link>
-
-          {authed ? (
-            <>
-              <Link className={`nav-link ${loc.pathname === "/admin" ? "active" : ""}`} to="/admin">
-                Admin
-              </Link>
-              <button className="btn secondary" onClick={onLogout}>Logout</button>
-            </>
-          ) : (
-            <Link
-              className={`nav-link ${loc.pathname === "/admin/login" ? "active" : ""}`}
-              to="/admin/login"
-            >
-              Admin Login
-            </Link>
-          )}
-        </div>
+      <Link to="/submit">DealFlow <span>Internal MVP</span></Link>
+      <div>
+        <Link to="/submit">Submit</Link>
+        {authed ? (
+          <>
+            <Link to="/admin">Admin</Link>
+            <button onClick={() => { logout(); nav("/admin/login"); }}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link to="/admin/login">Admin Login</Link>
+        )}
       </div>
     </div>
   );
