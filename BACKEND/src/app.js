@@ -9,7 +9,6 @@ import { notFound, errorHandler } from "./middleware/error.js";
 export function makeApp() {
   const app = express();
 
-  // CORS for local dev; lock down later if needed
   app.use(cors({
     origin: true,
     credentials: false,
@@ -17,10 +16,9 @@ export function makeApp() {
 
   app.use(express.json({ limit: "1mb" }));
 
-  // Light protection for public submission endpoint
   const submitLimiter = rateLimit({
     windowMs: 60 * 1000,
-    max: 30, // 30 req/min per IP
+    max: 30,
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -28,7 +26,10 @@ export function makeApp() {
   app.get("/health", (req, res) => res.json({ ok: true }));
 
   app.use("/api/auth", authRoutes);
-  app.use("/api/submissions", submitLimiter, submissionsRoutes);
+
+  // ✅ ONLY public submit is rate-limited
+  app.post("/api/submissions", submitLimiter, submissionsRoutes);
+  app.use("/api/submissions", submissionsRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

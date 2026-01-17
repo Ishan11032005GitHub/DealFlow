@@ -17,6 +17,7 @@ export function initDB() {
       status TEXT DEFAULT 'NEW',
       reviewer_notes TEXT,
       ai_summary TEXT,
+      ai_generated_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();

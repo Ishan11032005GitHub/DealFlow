@@ -2,7 +2,7 @@ import { db } from "../config/db.js";
 import crypto from "crypto";
 import { generateSummaryFromPitch } from "../services/ai.service.js";
 
-/* CREATE */
+/* ================= CREATE ================= */
 export function createSubmission(req, res) {
   const {
     founderName,
@@ -36,67 +36,135 @@ export function createSubmission(req, res) {
   res.status(201).json({ id });
 }
 
-/* LIST */
+/* ================= LIST (FIXED) ================= */
 export function listSubmissions(req, res) {
-  const rows = db
-    .prepare(`SELECT * FROM submissions ORDER BY created_at DESC`)
-    .all();
+  const { sector, stage, status, q } = req.query;
 
+  let sql = `
+    SELECT
+      id,
+      founder_name AS founderName,
+      startup_name AS startupName,
+      pitch AS pitchDescription,
+      sector,
+      stage,
+      traction,
+      status,
+      reviewer_notes AS reviewerNotes,
+      created_at AS createdAt
+    FROM submissions
+    WHERE 1 = 1
+  `;
+
+  const params = [];
+
+  if (sector) {
+    sql += " AND sector = ?";
+    params.push(sector);
+  }
+
+  if (stage) {
+    sql += " AND stage = ?";
+    params.push(stage);
+  }
+
+  if (status) {
+    sql += " AND status = ?";
+    params.push(status);
+  }
+
+  if (q) {
+    sql += " AND (LOWER(founder_name) LIKE ? OR LOWER(startup_name) LIKE ?)";
+    const like = `%${q.toLowerCase()}%`;
+    params.push(like, like);
+  }
+
+  sql += " ORDER BY created_at DESC";
+
+  const rows = db.prepare(sql).all(...params);
   res.json(rows);
 }
 
-/* GET ONE */
+/* ================= GET ONE ================= */
 export function getSubmission(req, res) {
-  const row = db
-    .prepare(`SELECT * FROM submissions WHERE id = ?`)
-    .get(req.params.id);
+  const row = db.prepare(`
+    SELECT
+      id,
+      founder_name AS founderName,
+      startup_name AS startupName,
+      pitch AS pitchDescription,
+      sector,
+      stage,
+      traction,
+      status,
+      reviewer_notes AS reviewerNotes,
+      ai_summary AS aiSummary,
+      ai_generated_at AS generatedAt,
+      created_at AS createdAt
+    FROM submissions
+    WHERE id = ?
+  `).get(req.params.id);
 
   if (!row) return res.status(404).json({ error: "Submission not found" });
+
+  if (row.aiSummary) {
+    row.aiSummary = JSON.parse(row.aiSummary);
+    row.aiSummary.generatedAt = row.generatedAt;
+  }
+
   res.json(row);
 }
 
-/* PATCH */
+/* ================= PATCH ================= */
 export function patchSubmission(req, res) {
   const { id } = req.params;
   const updates = req.body;
 
-  if (updates.reviewerNotes) {
-    updates.reviewer_notes = updates.reviewerNotes;
-    delete updates.reviewerNotes;
-  }
+  const allowed = {
+    status: "status",
+    reviewerNotes: "reviewer_notes",
+  };
 
-  const allowed = ["status", "reviewer_notes"];
-  const fields = Object.keys(updates).filter(k => allowed.includes(k));
+  const fields = Object.keys(updates).filter(k => allowed[k]);
 
   if (!fields.length) {
-    return res.status(400).json({ error: "No valid fields" });
+    return res.status(400).json({ error: "No valid fields to update" });
   }
 
-  const setClause = fields.map(f => `${f} = ?`).join(", ");
-  const values = fields.map(f => updates[f]);
+  const setClause = fields.map(k => `${allowed[k]} = ?`).join(", ");
+  const values = fields.map(k => updates[k]);
 
-  db.prepare(`UPDATE submissions SET ${setClause} WHERE id = ?`)
-    .run(...values, id);
+  db.prepare(
+    `UPDATE submissions SET ${setClause} WHERE id = ?`
+  ).run(...values, id);
 
-  const updated = db.prepare(`SELECT * FROM submissions WHERE id = ?`).get(id);
-  res.json(updated);
+  return getSubmission(req, res);
 }
 
-/* AI SUMMARY */
+/* ================= AI SUMMARY ================= */
 export async function generateAiSummary(req, res) {
   const { id } = req.params;
 
-  const row = db.prepare(`SELECT pitch FROM submissions WHERE id = ?`).get(id);
-  if (!row) return res.status(404).json({ error: "Not found" });
+  const row = db
+    .prepare(`SELECT pitch FROM submissions WHERE id = ?`)
+    .get(id);
 
-  const summary = await generateSummaryFromPitch(row.pitch);
+  if (!row) {
+    return res.status(404).json({ error: "Submission not found" });
+  }
 
-  db.prepare(`
-    UPDATE submissions SET ai_summary = ? WHERE id = ?
-  `).run(JSON.stringify(summary), id);
+  try {
+    const summary = await generateSummaryFromPitch(row.pitch);
 
-  const updated = db.prepare(`SELECT * FROM submissions WHERE id = ?`).get(id);
-  updated.aiSummary = summary;
+    db.prepare(`
+      UPDATE submissions
+      SET ai_summary = ?, ai_generated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(JSON.stringify(summary), id);
 
-  res.json(updated);
+    return getSubmission(req, res);
+  } catch (err) {
+    console.error("AI summary failed:", err);
+    res.status(500).json({ error: "AI summary generation failed" });
+  }
 }

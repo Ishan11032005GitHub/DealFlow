@@ -17,32 +17,27 @@ export default function AdminDashboard() {
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
 
-  // debounce search
+  // ✅ Debounced search
   const [qDebounced, setQDebounced] = useState("");
   useEffect(() => {
     const t = setTimeout(() => setQDebounced(q), 300);
     return () => clearTimeout(t);
   }, [q]);
 
-  const filters = useMemo(() => {
-    return {
-      sector,
-      stage,
-      status,
-      q: qDebounced,
-      sort: "-createdAt",
-      limit: 100,
-    };
-  }, [sector, stage, status, qDebounced]);
+  // ✅ Stable filters object
+  const filters = useMemo(() => ({
+    sector,
+    stage,
+    status,
+    q: qDebounced,
+  }), [sector, stage, status, qDebounced]);
 
   const load = async () => {
     try {
       setBusy(true);
       setError("");
       const res = await listSubmissions(filters);
-      // support both {items: []} or raw array
-      const list = Array.isArray(res) ? res : res?.items || res?.data || [];
-      setItems(list);
+      setItems(Array.isArray(res) ? res : []);
     } catch (err) {
       setError(err.message || "Failed to load submissions");
     } finally {
@@ -55,11 +50,13 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  // ✅ Clear ALWAYS triggers reload
   const onClear = () => {
     setSector("");
     setStage("");
     setStatus("");
     setQ("");
+    setQDebounced(""); // ← important
   };
 
   return (
@@ -84,11 +81,11 @@ export default function AdminDashboard() {
         />
 
         {error && <div className="alert error">{error}</div>}
-        {busy && <div className="alert info">Loading...</div>}
+        {busy && <div className="alert info">Loading…</div>}
 
         <SubmissionsTable
           items={items}
-          onRowClick={(s) => nav(`/admin/submissions/${s._id}`)}
+          onRowClick={(s) => nav(`/admin/submissions/${s.id}`)}
         />
       </div>
     </>

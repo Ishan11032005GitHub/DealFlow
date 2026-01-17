@@ -38,7 +38,10 @@ export default function SubmissionDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const createdLabel = useMemo(() => fmtDate(item?.createdAt), [item?.createdAt]);
+  const createdLabel = useMemo(
+    () => fmtDate(item?.createdAt),
+    [item?.createdAt]
+  );
 
   const setStatus = async (status) => {
     try {
@@ -57,7 +60,9 @@ export default function SubmissionDetail() {
     try {
       setSaving(true);
       setError("");
-      const updated = await updateSubmission(id, { reviewerNotes: notes });
+      const updated = await updateSubmission(id, {
+        reviewerNotes: notes,
+      });
       setItem(updated);
     } catch (err) {
       setError(err.message || "Failed to save notes");
@@ -71,8 +76,7 @@ export default function SubmissionDetail() {
       setAiBusy(true);
       setError("");
       const updated = await generateAiSummary(id);
-      const doc = updated?.submission || updated;
-      setItem(doc);
+      setItem(updated);
     } catch (err) {
       setError(err.message || "Failed to generate AI summary");
     } finally {
@@ -98,7 +102,9 @@ export default function SubmissionDetail() {
               ← Back
             </Link>
           </div>
-          <p className="muted">Review, update status, and add notes.</p>
+          <p className="muted">
+            Review, update status, and add notes.
+          </p>
         </div>
 
         {error && <div className="alert error">{error}</div>}
@@ -106,17 +112,27 @@ export default function SubmissionDetail() {
 
         {item && (
           <div className="gridDetail">
+            {/* LEFT */}
             <div className="card">
               <div className="card-header">
                 <div>
-                  <h2 style={{ margin: 0 }}>{item.startupName}</h2>
+                  <h2 style={{ margin: 0 }}>
+                    {item.startupName}
+                  </h2>
                   <div className="muted">
-                    Founder: <span className="strong">{item.founderName}</span>
+                    Founder:{" "}
+                    <span className="strong">
+                      {item.founderName}
+                    </span>
                   </div>
                 </div>
+
                 <div style={{ textAlign: "right" }}>
                   <StatusPill status={item.status} />
-                  <div className="muted" style={{ marginTop: 8 }}>
+                  <div
+                    className="muted"
+                    style={{ marginTop: 8 }}
+                  >
                     {createdLabel}
                   </div>
                 </div>
@@ -139,7 +155,10 @@ export default function SubmissionDetail() {
 
               <div className="section">
                 <h3>Pitch</h3>
-                <p className="pre">{item.pitch}</p>
+                {/* ✅ FIXED FIELD */}
+                <p className="pre">
+                  {item.pitchDescription}
+                </p>
               </div>
 
               <div className="section">
@@ -147,27 +166,46 @@ export default function SubmissionDetail() {
                 <div className="btn-row">
                   <button
                     className="btn secondary"
-                    disabled={saving || item.status === "NEW"}
+                    disabled={
+                      saving || item.status === "NEW"
+                    }
                     onClick={() => setStatus("NEW")}
                   >
                     Mark NEW
                   </button>
+
                   <button
                     className="btn secondary"
-                    disabled={saving || item.status === "REVIEWED"}
-                    onClick={() => setStatus("REVIEWED")}
+                    disabled={
+                      saving ||
+                      item.status === "REVIEWED"
+                    }
+                    onClick={() =>
+                      setStatus("REVIEWED")
+                    }
                   >
                     Mark REVIEWED
                   </button>
+
                   <button
                     className="btn primary"
-                    disabled={saving || item.status === "PASSED"}
+                    disabled={
+                      saving || item.status === "PASSED"
+                    }
                     onClick={() => setStatus("PASSED")}
                   >
                     Mark PASSED
                   </button>
                 </div>
-                {saving && <div className="muted" style={{ marginTop: 8 }}>Saving…</div>}
+
+                {saving && (
+                  <div
+                    className="muted"
+                    style={{ marginTop: 8 }}
+                  >
+                    Saving…
+                  </div>
+                )}
               </div>
 
               <div className="section">
@@ -175,42 +213,73 @@ export default function SubmissionDetail() {
                 <textarea
                   rows={5}
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) =>
+                    setNotes(e.target.value)
+                  }
                   placeholder="Add notes for internal context..."
                 />
+
                 <div className="btn-row">
                   <button
                     className="btn secondary"
                     disabled={saving}
-                    onClick={() => setNotes(item.reviewerNotes || "")}
+                    onClick={() =>
+                      setNotes(item.reviewerNotes || "")
+                    }
                   >
                     Reset
                   </button>
-                  <button className="btn primary" disabled={saving} onClick={saveNotes}>
+
+                  <button
+                    className="btn primary"
+                    disabled={saving}
+                    onClick={saveNotes}
+                  >
                     Save notes
                   </button>
                 </div>
               </div>
             </div>
 
+            {/* RIGHT */}
             <div className="card">
               <div className="card-header">
                 <h3>AI summary</h3>
-                <div className="muted">Optional (single API call)</div>
+                <div className="muted">
+                  Optional (single API call)
+                </div>
               </div>
 
               {item.aiSummary ? (
-                <AiSummaryBlock summary={item.aiSummary} />
+                <AiSummaryBlock
+                  summary={item.aiSummary}
+                />
               ) : (
-                <div className="muted">No AI summary generated yet.</div>
+                <div className="muted">
+                  No AI summary generated yet.
+                </div>
               )}
 
               <div style={{ marginTop: 14 }}>
-                <button className="btn primary" disabled={aiBusy} onClick={runAi}>
-                  {aiBusy ? "Generating..." : item.aiSummary ? "Regenerate" : "Generate summary"}
+                <button
+                  className="btn primary"
+                  disabled={aiBusy}
+                  onClick={runAi}
+                >
+                  {aiBusy
+                    ? "Generating..."
+                    : item.aiSummary
+                    ? "Regenerate"
+                    : "Generate summary"}
                 </button>
-                <div className="muted" style={{ marginTop: 8 }}>
-                  Generates bullets + strengths + risks from the pitch description and stores it.
+
+                <div
+                  className="muted"
+                  style={{ marginTop: 8 }}
+                >
+                  Generates bullets + strengths + risks
+                  from the pitch description and stores
+                  it.
                 </div>
               </div>
             </div>
@@ -221,39 +290,39 @@ export default function SubmissionDetail() {
   );
 }
 
+/* ================= HELPERS ================= */
+
 function AiSummaryBlock({ summary }) {
-  const bullets = Array.isArray(summary?.bullets) ? summary.bullets : [];
-  const strengths = Array.isArray(summary?.strengths) ? summary.strengths : [];
-  const risks = Array.isArray(summary?.risks) ? summary.risks : [];
+  const bullets = summary?.bullets || [];
+  const strengths = summary?.strengths || [];
+  const risks = summary?.risks || [];
 
   return (
     <div className="ai">
-      <MetaRow label="Model" value={summary?.model || "—"} />
-      <MetaRow label="Generated" value={fmtDate(summary?.generatedAt)} />
+      <MetaRow label="Model" value={summary.model} />
+      <MetaRow
+        label="Generated"
+        value={fmtDate(summary.generatedAt)}
+      />
 
-      <div className="ai-section">
-        <div className="ai-title">Summary</div>
-        <ul>
-          {bullets.map((x, i) => <li key={i}>{x}</li>)}
-          {!bullets.length && <li className="muted">—</li>}
-        </ul>
-      </div>
+      <Section title="Summary" items={bullets} />
+      <Section title="Strengths" items={strengths} />
+      <Section title="Risks" items={risks} />
+    </div>
+  );
+}
 
-      <div className="ai-section">
-        <div className="ai-title">Strengths</div>
-        <ul>
-          {strengths.map((x, i) => <li key={i}>{x}</li>)}
-          {!strengths.length && <li className="muted">—</li>}
-        </ul>
-      </div>
-
-      <div className="ai-section">
-        <div className="ai-title">Risks</div>
-        <ul>
-          {risks.map((x, i) => <li key={i}>{x}</li>)}
-          {!risks.length && <li className="muted">—</li>}
-        </ul>
-      </div>
+function Section({ title, items }) {
+  return (
+    <div className="ai-section">
+      <div className="ai-title">{title}</div>
+      <ul>
+        {items.length ? (
+          items.map((x, i) => <li key={i}>{x}</li>)
+        ) : (
+          <li className="muted">—</li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -271,5 +340,8 @@ function fmtDate(v) {
   if (!v) return "—";
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+  return d.toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
